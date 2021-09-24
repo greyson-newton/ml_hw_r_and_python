@@ -1,0 +1,379 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2578
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 Times-Roman;}
+{\colortbl;\red255\green255\blue255;\red203\green209\blue214;}
+{\*\expandedcolortbl;;\cssrgb\c83529\c85490\c87059;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 import pandas as pd\
+import numpy as np\
+import csv\
+import matplotlib.pyplot as plt\
+from mlxtend.evaluate import bias_variance_decomp\
+from mpl_toolkits.axisartist.axislines import Subplot\
+import scipy.stats as st\
+from scipy.stats import norm\
+import math\
+import random\
+from matplotlib.pyplot import cm\
+# test=False\
+# debug=False\
+\
+# \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # DATA INPUT\
+# reg_read_file = pd.read_csv (r'C:/Users/greyn/Downloads/ml_hw_1/reg_data.txt')\
+# reg_read_file.to_csv (r'C:/Users/greyn/Downloads/ml_hw_1/reg_data.csv', index=0)\
+\
+# trn_read_file = pd.read_csv (r'C:/Users/greyn/Downloads/ml_hw_1/tr.txt')\
+# trn_read_file.to_csv (r'C:/Users/greyn/Downloads/ml_hw_1/tr.csv', index=0)\
+# tst_read_file = pd.read_csv (r'C:/Users/greyn/Downloads/ml_hw_1/test.txt')\
+# tst_read_file.to_csv (r'C:/Users/greyn/Downloads/ml_hw_1/tst.csv', index=0)\
+\
+# reg_df = reg_read_file.astype(dtype=\{'x_1': np.int64, 'x_2': np.int64,'x_3': np.int64,'y': np.int64\})\
+# trn_df = trn_read_file.astype(dtype=\{'X': np.float32, 'Y': np.float32\})\
+# tst_df = tst_read_file.astype(dtype=\{'X': np.float32, 'Y': np.float32\})\
+# trn_dfplot(x ='X', y='Y', kind = 'scatter')\
+# plt.show()\
+# if debug:\
+# \'a0\'a0 print(trn_df.dtypes)\
+# \'a0\'a0 print(tst_df.dtypes)\
+# \'a0\'a0 print(reg_df.dtypes)\
+\
+# \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Data prep\
+# reg_df.insert(0, 'Ones', 1)\
+# trn_df.insert(0, 'Ones', 1)\
+# tst_df.insert(0, 'Ones', 1)\
+\
+# # reg_df=reg_df.drop(columns=['x_2'])\
+\
+# cols = reg_df.shape[1]\
+# rows = reg_df.shape[0]\
+\
+# print("INPUT DATA- \\n\\n",reg_df)\
+def variance(y_act,y_pred):\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("\\n\\tVARIANCE\\n\\t yact",y_act,"\\nypred",y_pred)\
+\'a0\'a0\'a0\'a0\'a0\'a0 Y = np.squeeze(np.asarray(y_act))\
+\'a0\'a0\'a0\'a0\'a0\'a0 Y_pred = np.squeeze(np.asarray(y_pred))\
+\'a0\'a0\'a0\'a0\'a0\'a0 # X = np.squeeze(np.asarray(x))\
+\'a0\'a0\'a0\'a0\'a0\'a0 n = len(y_pred)\
+\'a0\'a0\'a0\'a0\'a0\'a0 ssum=0\
+\'a0\'a0\'a0\'a0\'a0\'a0 # print("y ",Y)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # print("predicted ",predicted_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # for q,w in zip(predicted_y,Y):\
+\'a0\'a0\'a0\'a0\'a0\'a0 # # ssum += (q-w)**2\
+\'a0\'a0\'a0\'a0\'a0\'a0 # print(ssum/4)\
+\'a0\'a0\'a0\'a0\'a0\'a0 SSres= Y - Y_pred\
+\'a0\'a0\'a0\'a0\'a0\'a0 SStot = Y - Y.mean()\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 r_2= 1 - ( SSres.dot(SSres) / SStot.dot(SStot) )\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 adj_r2 = 1 - ((1-r_2**2)*(11)/(7))\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("\\n\\tRESULTS--\\n")\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("value of ssres, \\t",SSres.sum())\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("value of r_2 is, \\t",r_2)\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("value of ssres/4 is, \\t",(SSres.sum()/4))\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("value of adj r2, \\t",adj_r2)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 return r_2,adj_r2\
+def regress(scale_values,reg_df,count):\
+\'a0\'a0\'a0\'a0\'a0\'a0 orig_df=reg_df\
+\'a0\'a0\'a0\'a0\'a0\'a0 scaled_reg_df = reg_df\
+\'a0\'a0\'a0\'a0\'a0\'a0 scale_vec_0=[scale_values[0] for i in range(rows)]\
+\'a0\'a0\'a0\'a0\'a0\'a0 scale_vec_1=[scale_values[1] for i in range(rows)]\
+\'a0\'a0\'a0\'a0\'a0\'a0 def scale(a):\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 scale_by=input("input scalar")\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return a*scale_by\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 scaled_reg_df['x_3'] = (scaled_reg_df['x_3'] * scale_vec_0)\
+\'a0\'a0\'a0\'a0\'a0\'a0 scaled_reg_df['x_1'] = (scaled_reg_df['x_1'] * scale_vec_1)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # print("scaled_by " ,scale_values[0],",",scale_values[1])\
+\'a0\'a0\'a0\'a0\'a0\'a0 # print(scaled_reg_df)\
+\'a0\'a0\'a0\'a0\'a0\'a0 reg_df=scaled_reg_df\
+\'a0\'a0\'a0\'a0\'a0\'a0 # other = reg_df.mult()\
+\'a0\'a0\'a0\'a0\'a0\'a0 X = reg_df.iloc[:,0:cols-1]\
+\'a0\'a0\'a0\'a0\'a0\'a0 y = reg_df.iloc[:,cols-1:cols]\
+\'a0\'a0\'a0\'a0\'a0\'a0 IdentitySize = X.shape[1]\
+\'a0\'a0\'a0\'a0\'a0\'a0 IdentityMatrix= np.zeros((IdentitySize, IdentitySize))\
+\'a0\'a0\'a0\'a0\'a0\'a0 np.fill_diagonal(IdentityMatrix, 1)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 def method(option):\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 lamb = 1\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if option==0: \'a0 # least square method\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return np.linalg.lstsq(X.T.dot(X) + lamb * IdentityMatrix, X.T.dot(y),rcond=None)[0]\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if option==1:\'a0\'a0 # System solver\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 XtX_lamb = X.T.dot(X) + lamb * IdentityMatrix\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 XtY = X.T.dot(y)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return np.linalg.solve(XtX_lamb, XtY);\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if option==2:\'a0\'a0 # Normal equation method\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 lamb = 1\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 xTx = X.T.dot(X) + lamb * IdentityMatrix\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 XtX = np.linalg.inv(xTx)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 XtX_xT = XtX.dot(X.T)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return XtX_xT.dot(y)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 thetas=method(2)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 betas=[]\
+\'a0\'a0\'a0\'a0\'a0\'a0 predicted_y=[] # to be predicted\
+\'a0\'a0\'a0\'a0\'a0\'a0 actual_y=reg_df[["y"]].to_numpy(dtype=float)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("cols:\\t",cols)\
+\'a0\'a0\'a0\'a0\'a0\'a0 if cols==5:\
+\'a0\'a0\'a0\'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0 actual_x=reg_df[["x_1","x_2","x_3"]].to_numpy(dtype=float)\
+\'a0\'a0\'a0\'a0\'a0\'a0 if cols==4:\
+\'a0\'a0\'a0\'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0 actual_x=reg_df[["x_1","x_3"]].to_numpy(dtype=float)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 plt_y,plt_x=[],[]\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 for element in np.transpose(actual_y)[0]:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt_y.append(element)\
+\'a0\'a0\'a0\'a0\'a0\'a0 for element in actual_x:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if cols==5:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0 plt_x.append([element[0],element[1],element[2]])\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if cols==4:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0 plt_x.append([element[0],element[1]])\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 # actual_y=y[]\
+\'a0\'a0\'a0\'a0\'a0\'a0 if debug:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(actual_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("y's transposed: \\n", np.transpose(actual_y))\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("plt_y, len- ",len(plt_y),"-",plt_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("plt_x len-",len(plt_x),"-",plt_x)\
+\'a0\'a0\'a0\'a0\'a0\'a0 x=np.arange(0,12,1)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 for t in thetas:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 betas.append(t[0])\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("\\nBETA COEFFICIENTS- \\n\\t\\t",betas)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 def y(x_i,betas):\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # print("x array: \\n",x_i)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 pre_y=[]\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if len(x_i[0])==3:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("\\n\\tfull model\\n")\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 for x in x_i:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 p_y = betas[0]+betas[1]*x[0]+betas[2]*x[1]+betas[3]*x[2]\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 pre_y.append(p_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return pre_y\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if len(x_i[0])==2 or len(betas)==3:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("\\n\\tengineer model\\n")\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 for x in x_i:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 p_y = betas[0]+betas[1]*x[0]+betas[2]*x[1]\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 pre_y.append(p_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return pre_y\
+\'a0\'a0\'a0\'a0\'a0\'a0 def y_piecewise(x_i,betas):\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 for x in x_i:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if x<=a:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 p_y = betas[0]+betas[1]*x+betas[2]*(x**2)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 p_y = betas[3]+betas[4]*x+betas[5]*(x**2)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 pre_y.append(p_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0 def variance(y_act,y_pred):\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 Y = np.squeeze(np.asarray(y_act))\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # X = np.squeeze(np.asarray(x))\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 n = x.size\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 ssum=0\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # print("y ",Y)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # print("predicted ",predicted_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # for q,w in zip(predicted_y,Y):\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # # ssum += (q-w)**2\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # print(ssum/4)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 SSres= Y - predicted_y\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 SStot = Y - Y.mean()\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 r_2= 1 - ( SSres.dot(SSres) / SStot.dot(SStot) )\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 adj_r2 = 1 - ((1-r_2**2)*(11)/(7))\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("\\n\\tRESULTS--\\n")\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("value of ssres, \\t",SSres.sum())\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("value of r_2 is, \\t",r_2)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("value of ssres/4 is, \\t",(SSres.sum()/4))\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("value of adj r2, \\t",adj_r2)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return r_2,adj_r2\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 predicted_y=y(plt_x,betas)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 r_2,adj_r2=variance(actual_y,predicted_y)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 df = pd.DataFrame(\{"act_y":plt_y, "pred_y":predicted_y\})\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("\\nresult data:\\n",df)\
+\'a0\'a0\'a0\'a0\'a0\'a0 fig = plt.figure()\
+\'a0\'a0\'a0\'a0\'a0\'a0 ax = Subplot(fig, 111)\
+\'a0\'a0\'a0\'a0\'a0\'a0 fig.add_subplot(ax)\
+\'a0\'a0\'a0\'a0\'a0\'a0 ax.plot(x,predicted_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0 ax.scatter(x,plt_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # reg_str=\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 plt.text(0.5,60,'r_2: '+str(r_2))\
+\'a0\'a0\'a0\'a0\'a0\'a0 plt.title("Regression scaled by "+str(scale_values[0])+","+str(scale_values[1]))\
+\'a0\'a0\'a0\'a0\'a0\'a0 plt.grid(True)\
+\'a0\'a0\'a0\'a0\'a0\'a0 plt.show()\
+\'a0\'a0\'a0\'a0\'a0\'a0 fig.savefig("regression_scaled_by"+str(count)+"variance"+str(r_2).replace(".","_")+".jpg")\
+\'a0\'a0\'a0\'a0\'a0\'a0 print(st.t.interval(alpha=0.95, df=len(predicted_y)-1, loc=np.mean(predicted_y), scale=st.sem(predicted_y)))\
+\
+# # scale_values=[[0.1,0.1],[0.3,0.3],[0.6,0.6],[0.9,0.9],[1.2,1.2],[1.5,1.5],[3.8,3.8]]\
+# scale_values=[[2.0,2.0]]\
+# scale_values=[i[::-1] for i in scale_values[::-1]]\
+# count=0\
+# for scale_v in scale_values:\
+# \'a0\'a0 orig_df=reg_df\
+# \'a0\'a0 # regress(scale_v,reg_df,count)\
+# \'a0\'a0 reg_df=orig_df\
+# \'a0\'a0 count+=1\
+\
+class GKR:\
+\
+\'a0\'a0\'a0\'a0def __init__(self, df, b):\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 cols = df.shape[1]\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 rows = df.shape[0]\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.x=df[["X"]].to_numpy(dtype=float)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.y = df[["Y"]].to_numpy(dtype=float)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.b = b\
+\
+\'a0\'a0\'a0\'a0'''Implement the Gaussian Kernel'''\
+\'a0\'a0\'a0 def gaussian_kernel(self, z):\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return (1/np.sqrt(2*np.pi))*np.exp(-0.5*z**2)\
+\
+\'a0\'a0\'a0\'a0'''Calculate weights and return prediction'''\
+\'a0\'a0\'a0 def predict(self, X):\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 kernels = np.array([self.gaussian_kernel((np.linalg.norm(xi-X))/self.b) for xi in self.x])\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 weights = np.array([len(self.x) * (kernel/np.sum(kernels)) for kernel in kernels])\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 np.array([self.gaussian_kernel((np.linalg.norm(xi-X))/self.b) for xi in self.x])\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 weights = np.array([len(self.x) * (kernel/np.sum(kernels)) for kernel in kernels])\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return np.dot(weights.T, self.y)/len(self.x)\
+\'a0\'a0\'a0 def set_beta(self,new_beta):\
+\'a0\'a0\'a0 \'a0\'a0 self.b=new_beta\
+trn_read_file = pd.read_csv (r'C:/Users/greyn/Downloads/ml_hw_1/tr.txt')\
+trn_read_file.to_csv (r'C:/Users/greyn/Downloads/ml_hw_1/tr.csv', index=0)\
+trn_df = trn_read_file.astype(dtype=\{'X': np.float32, 'Y': np.float32\})\
+\
+gkr = GKR(trn_df, 1)\
+\
+actual_y=trn_df[["Y"]].to_numpy(dtype=float)\
+plt_ya,plt_yb,plt_yc=[],[],[]\
+plt_yax,plt_ybx,plt_ycx=[],[],[]\
+plt_y,plt_x,plt_r,plt_rx=[],[],[],[]\
+# be = np.linspace(0,1,20)\
+be=[0.00001]\
+i,n=0,len(gkr.x)\
+a=1\
+bias=-0.5\
+stepsize=0.5\
+\
+debug=False\
+p_x=0\
+\
+count=0\
+fig, (ax1, ax2) = plt.subplots(1, 2)\
+ax1 = trn_df.plot(x ='X', y='Y', kind = 'scatter')\
+color = iter(cm.rainbow(np.linspace(0, 1, len(be))))\
+for b in be:\
+\'a0\'a0\'a0\'a0\'a0\'a0 gkr = GKR(trn_df, b)\
+\'a0\'a0\'a0\'a0\'a0\'a0 count=0\
+\'a0\'a0\'a0\'a0\'a0\'a0 plt_y,plt_x,plt_r,plt_rx=[],[],[],[]\
+\'a0\'a0\'a0\'a0\'a0\'a0 for x in gkr.x:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 p_y=gkr.predict([x])\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt_x.append(x)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt_y.append(p_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if len(plt_y)>2 and len(plt_y)<100:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 r_2,adj_r2 = variance(y_act=actual_y[:len(plt_y)],y_pred=np.asarray(plt_y))\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 rabs=abs(adj_r2)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 r=math.sqrt(rabs)/2\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt_r.append(r)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt_rx.append(x)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if adj_r2<=0:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 bias+=.3\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 a+=.1\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 bias-=.3\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 a-=.1\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 count+=1\
+\'a0\'a0\'a0\'a0\'a0\'a0 c=next(color)\
+\'a0\'a0\'a0\'a0\'a0\'a0 ax1.plot(plt_x,plt_y,color=c,label=str(b),alpha=1.0)\
+\'a0\'a0\'a0\'a0\'a0\'a0 ax2.plot(plt_rx,plt_r,color=c,label=str(b))\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 # i=random.uniform(-.1, n)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # if i<0:\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 a+=stepsize\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 i=random.uniform(0,n)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # if i>=0 and i<=n/3:\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 gkr.set_beta(be[0])\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 p_x += a*(1/n)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 p_y=gkr.predict([x*a+bias])\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_x.append(x)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_yax.append(x*a+bias)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_y.append(p_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_ya.append(p_y)\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 if count>2:\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 r_2,adj_r2 = variance(y_act=actual_y[:len(plt_y)],y_pred=np.asarray(plt_y))\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0 plt_r.append(math.sqrt(adj_r2/2*count))\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt_rx.append(x)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if adj_r2<=0:\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 bias+=.3\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 a+=.1\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 bias-=.3\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 a-=.1\
+\'a0\'a0\'a0\'a0\'a0\'a0 # if i>n/3 and i<=(2*n/3):\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 gkr.set_beta(be[1])\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 p_y=gkr.predict([x*a+bias])\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 p_x += a*(1/n)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_x.append(x)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_ybx.append(x*a+bias)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_y.append(p_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_yb.append(p_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 if count>2:\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 r_2,adj_r2 = variance(y_act=actual_y[:len(plt_y)],y_pred=np.asarray(plt_y))\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0 plt_r.append(math.sqrt(adj_r2/2*count))\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt_rx.append(x)\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # if adj_r2<=0:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 bias+=.3\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 a+=1\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # else:\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 bias-=.3\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 a-=.1\
+\'a0\'a0\'a0\'a0\'a0\'a0 # if i>(2*n/3):\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 gkr.set_beta(be[2])\
+\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 p_y=gkr.predict([x*a+bias])\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 p_x += a*(1/n)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_ycx.append(x*a+bias)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_x.append(x)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_y.append(p_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 plt_ya.append(p_y)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 if count>2:\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 r_2,adj_r2 = variance(y_act=actual_y[:len(plt_y)],y_pred=np.asarray(plt_y))\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0 plt_r.append(math.sqrt(adj_r2/2*count))\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt_rx.append(x)\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if adj_r2<=0:\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 bias+=.3\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 a+=.1\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 bias-=.3\
+\'a0\'a0\'a0\'a0\'a0\'a0 # \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 a-=.1\
+\'a0\'a0\'a0\'a0\'a0\'a0 # count+=1\
+\'a0\'a0\'a0\'a0\'a0\'a0 # bias+=.1\
+if debug:\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("\\nsize of pltxandy:\\t",len(plt_x),",",len(plt_y))\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("\\nsize of a,b,c:\\t",len(plt_ya),",",len(plt_yb),",",len(plt_yc))\
+\'a0\'a0\'a0\'a0\'a0\'a0 print("\\nsize of gkr.x:\\t",gkr_a.x)\
+# /omm# pltplot(plt_yax,plt_ya,color='orange')\
+# plt.plot(plt_ybx,plt_yb,color='green')\
+# plt.plot(plt_ycx,plt_yc,color='purple')\
+ax1.plot(plt_x, plt_y,"red")\
+ax1.set_title('Gaussion Kernal Regression')\
+ax1.legend()\
+ax2.set_ylabel('Y')\
+ax2.set_xlabel('X')\
+ax2.set_title('GKR Loss v. Bandwidth')\
+ax2.set_ylabel('Loss')\
+ax2.set_xlabel('X')\
+\
+plt.show()}
